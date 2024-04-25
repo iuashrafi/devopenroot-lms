@@ -1,3 +1,12 @@
+import { auth } from "@clerk/nextjs/server";
+import { UserButton } from "@clerk/nextjs";
+
 export default function Home() {
-  return <div className="font-medium text-3xl">Dashboard page</div>;
+  const { userId } = auth();
+  return (
+    <div className=" ">
+      hello
+      {userId && <UserButton afterSignOutUrl="/" />}
+    </div>
+  );
 }
