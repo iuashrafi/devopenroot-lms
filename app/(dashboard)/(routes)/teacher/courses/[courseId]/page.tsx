@@ -1,13 +1,13 @@
-import { IconBadge } from "@/components/icon-badge";
-import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { IconBadge } from "@/components/icon-badge";
 import {
   CircleDollarSign,
   File,
   LayoutDashboard,
   ListChecks,
 } from "lucide-react";
-import { redirect } from "next/navigation";
 import { TitleForm } from "./_components/title-form";
 import { DescriptionForm } from "./_components/description-form";
 import { ImageForm } from "./_components/image-form";
@@ -17,6 +17,7 @@ import { AttachmentForm } from "./_components/attachment-form";
 import { ChaptersForm } from "./_components/chapters-form";
 import { Banner } from "@/components/banner";
 import { Actions } from "./_components/actions";
+import CategorySelectForm from "./_components/category-select-form";
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const { userId } = auth();
@@ -42,12 +43,12 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
       },
     },
   });
+
+  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
+
   if (!course) {
     return redirect("/");
   }
-
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
-  console.log("categories=", categories);
 
   const requiredFields = [
     course.title,
@@ -61,7 +62,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const totalFields = requiredFields.length;
   const completedFields = requiredFields.filter(Boolean).length;
 
-  const completionText = `${completedFields}/${totalFields}`;
+  const completionText = `(${completedFields}/${totalFields})`;
 
   const isComplete = requiredFields.every(Boolean);
 
@@ -94,16 +95,23 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
             <TitleForm initialData={course} courseId={course.id} />
             <DescriptionForm initialData={course} courseId={course.id} />
             <ImageForm initialData={course} courseId={course.id} />
+            {/* 
+            // discarded
             <CategoryForm
               initialData={course}
               courseId={course.id}
-              options={[
-                { label: "No category", value: "" }, // Default option
-                ...categories.map((category) => ({
-                  label: category.name,
-                  value: category.id,
-                })),
-              ]}
+              options={categories.map((category) => ({
+                label: category.name,
+                value: category.id,
+              }))}
+            /> */}
+            <CategorySelectForm
+              initialData={course}
+              courseId={course.id}
+              options={categories.map((category) => ({
+                label: category.name,
+                value: category.id,
+              }))}
             />
           </div>
 

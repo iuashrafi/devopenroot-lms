@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import * as z from "zod";
-import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import { Course } from "@prisma/client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -14,30 +17,34 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Course } from "@prisma/client";
-import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface CategoryFormProps {
+interface CategorySelectFormProps {
   initialData: Course;
   courseId: string;
   options: { label: string; value: string }[];
 }
-
 const formSchema = z.object({
   categoryId: z.string().min(1),
 });
 
-export const CategoryForm = ({
+const CategorySelectForm = ({
   initialData,
   courseId,
   options,
-}: CategoryFormProps) => {
-  console.log("options=", options);
+}: CategorySelectFormProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const toggleEdit = () => setIsEditing((current) => !current);
+
+  //   console.log("options=", options);
+  //   console.log("course initialData=", initialData);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,7 +56,8 @@ export const CategoryForm = ({
   const { isSubmitting, isValid } = form.formState;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    // alert("submitting category form = " + JSON.stringify(values, null, 2));
+
     try {
       await axios.patch(`/api/courses/${courseId}`, values);
       toast.success("Course updated");
@@ -59,15 +67,10 @@ export const CategoryForm = ({
       toast.error("Something went wrong");
     }
   };
-  console.log("course initialData=", initialData);
-  // const selectedOption = initialData.categoryId
-  //   ? options.find((option) => option.value === initialData.categoryId)
-  //   : options.find((option) => option.value === "");
 
   const selectedOption = options.find(
     (option) => option.value === initialData.categoryId
   );
-
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
@@ -105,7 +108,21 @@ export const CategoryForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Combobox options={options} {...field} />
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {options.map((option) => (
+                          <SelectItem value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,3 +139,5 @@ export const CategoryForm = ({
     </div>
   );
 };
+
+export default CategorySelectForm;
